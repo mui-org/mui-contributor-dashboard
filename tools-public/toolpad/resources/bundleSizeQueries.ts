@@ -2,9 +2,6 @@
 import axios from 'axios';
 
 function getMainBundleLabel(bundleId: string): string {
-  if (bundleId === 'packages/material-ui/build/umd/material-ui.production.min.js') {
-    return '@mui/material[umd]';
-  }
   if (bundleId === '@material-ui/core/Textarea') {
     return 'TextareaAutosize';
   }
@@ -23,11 +20,6 @@ function getMainBundleLabel(bundleId: string): string {
       .replace(/^@material-ui\/unstyled$/, '@mui/core')
       // org rename
       .replace(/^@material-ui\/([\w-]+)$/, '@mui/$1')
-      // path renames
-      .replace(
-        /^packages\/material-ui\/material-ui\.production\.min\.js$/,
-        'packages/mui-material/material-ui.production.min.js',
-      )
       .replace(/^@material-ui\/core\//, '')
       .replace(/\.esm$/, '')
   );
