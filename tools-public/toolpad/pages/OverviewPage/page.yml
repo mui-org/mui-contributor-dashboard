@@ -405,6 +405,10 @@ spec:
                           name: text32
                           props:
                             value: Joy UI NPM KPIs
+                        - component: Text
+                          name: text34
+                          props:
+                            value: Team's issues activity
                     - component: PageColumn
                       name: pageColumn9
                       layout:
@@ -446,6 +450,19 @@ spec:
                                 parameters: {}
                             content: View page
                             variant: text
+                        - component: Button
+                          name: button28
+                          props:
+                            content: View page
+                            variant: text
+                            onClick:
+                              $$navigationAction:
+                                page: muiTeamIssues
+                                parameters:
+                                  repoId: mui/material-ui
+                                  benchmarkId: ''
+                          layout:
+                            horizontalAlign: end
               layout:
                 columnSize: 1
       layout:

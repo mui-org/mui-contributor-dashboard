@@ -107,6 +107,93 @@ SELECT * FROM final_table
   return data.data;
 }
 
+export async function getTeamIssues(repo: string = 'mui/material-ui') {
+  if (repo === '') {
+    return [];
+  }
+
+  const repoMap = {
+    'mui/material-ui': 23083156,
+    'mui/base-ui': 762289766,
+    'mui/pigment-css': 715829513,
+    'vercel/next.js': 70107786,
+    'radix-ui/primitives': 273499522,
+  };
+
+  const repoParam = repoMap[repo] ?? repo;
+
+  const openQuery = `
+WITH maintainers as (
+  SELECT
+    DISTINCT ge.actor_login
+  FROM
+    github_events ge
+  WHERE
+    ge.repo_id = ${repoParam}
+    AND ge.type = 'PullRequestEvent'
+    /* maintainers are defined as the ones that are allowed to merge PRs */
+    AND ge.action = 'closed'
+    AND ge.pr_merged = 1
+    AND ge.created_at >= '2016-01-01'
+),
+issues AS (
+  SELECT
+      DATE_FORMAT(created_at, '%Y-%m-01') AS event_month,
+      COUNT(*) AS cnt
+  FROM github_events ge
+  WHERE 
+  type = 'IssuesEvent' 
+  AND action = 'opened' 
+  AND ge.repo_id = ${repoParam}
+  AND ge.actor_login in (SELECT actor_login FROM maintainers)
+  AND event_month >= '2020-01-01'
+  GROUP BY 1
+  ORDER BY 1
+), issue_comments AS (
+  SELECT
+      DATE_FORMAT(created_at, '%Y-%m-01') AS event_month,
+      COUNT(*) AS cnt
+  FROM github_events ge
+  WHERE 
+  type = 'IssueCommentEvent' 
+  AND action = 'created'
+  AND ge.repo_id = ${repoParam}
+  AND ge.actor_login in (SELECT actor_login FROM maintainers)
+  AND event_month >= '2020-01-01'
+  GROUP BY 1
+  ORDER BY 1
+), event_months AS (
+  SELECT DISTINCT event_month
+  FROM (
+      SELECT event_month
+      FROM issues
+      UNION
+      SELECT event_month
+      FROM issue_comments
+  ) sub
+)
+SELECT
+  m.event_month,
+  IFNULL(i.cnt, 0) + IFNULL(ic.cnt, 0) AS issues_activity
+FROM event_months m
+LEFT JOIN issues i ON m.event_month = i.event_month
+LEFT JOIN issue_comments ic ON m.event_month = ic.event_month
+ORDER BY m.event_month ASC
+  `;
+  const res = await fetch('https://api.ossinsight.io/q/playground', {
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ sql: openQuery, type: 'repo', id: `${repoParam}` }),
+    method: 'POST',
+  });
+  if (res.status !== 200) {
+    throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 500)}`);
+  }
+  const data = await res.json();
+  return data.data;
+}
+
 export async function queryCommitStatuses(repository: string) {
   if (!process.env.GITHUB_TOKEN) {
     throw new Error(`Env variable GITHUB_TOKEN not configured`);

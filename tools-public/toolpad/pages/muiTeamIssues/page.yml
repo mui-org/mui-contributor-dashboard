@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mui/mui-toolpad/v0.6.0/docs/schemas/v1/definitions.json#properties/Page
+
+apiVersion: v1
+kind: page
+spec:
+  title: muiTeamIssues
+  display: shell
+  authorization:
+    allowAll: true
+  queries:
+    - name: getRepoDataQuery
+      mode: query
+      query:
+        function: functions.ts#getTeamIssues
+        kind: local
+      parameters:
+        - name: repo
+          value:
+            $$jsExpression: page.parameters.repoId
+    - name: getBenchmarkDataQuery
+      mode: query
+      query:
+        function: functions.ts#getTeamIssues
+        kind: local
+      parameters:
+        - name: repo
+          value:
+            $$jsExpression: page.parameters.benchmarkId
+  parameters:
+    - name: repoId
+      value: mui/material-ui
+    - name: benchmarkId
+      value: ''
+  content:
+    - component: Text
+      name: text2
+      props:
+        value: TEAM ISSUES ACITVITY
+        variant: h3
+    - component: Text
+      name: text
+      props:
+        mode: markdown
+        value:
+          $$jsExpression: '`This charts shows the team''s issues acitivity stats, in
+            comparison with a benchmark repository (if provided). Use the
+            <code>repoId</code> & <code>benchmarkId</code> query params by
+            specifying the <a href="https://ossinsight.io/explore/">OSS
+            Insight</a> id. For the most commons used repositories, like
+            mui/material-ui, mui/base-ui, mui/pigment-css, vercel/next.js you
+            can directly use the repository name.`'
+    - component: Text
+      name: text1
+      props:
+        mode: markdown
+        value:
+          $$jsExpression: |-
+            `MUI repo: <b>${page.parameters.repoId ??
+                        'mui/material-ui'}</b>, Benchmark repo:
+                        <b>${page.parameters.benchmarkId !== '' ?
+                        page.parameters.benchmarkId : '(not specified)'}</b>`
+    - component: Chart
+      name: chart
+      props:
+        data:
+          - label: MUI repo data
+            kind: line
+            data:
+              $$jsExpression: getRepoDataQuery.data
+            color: '#2E96FF'
+            xKey: event_month
+            yKey: issues_activity
+          - label: Benchmark repo data
+            kind: line
+            data:
+              $$jsExpression: getBenchmarkDataQuery.data
+            color: '#ff9800'
+            xKey: event_month
+            yKey: issues_activity
