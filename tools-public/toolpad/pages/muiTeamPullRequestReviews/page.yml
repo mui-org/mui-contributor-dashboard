@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mui/mui-toolpad/v0.6.0/docs/schemas/v1/definitions.json#properties/Page
+
+apiVersion: v1
+kind: page
+spec:
+  title: muiTeamPullRequestReviews
+  display: shell
+  content:
+    - component: Text
+      name: text2
+      props:
+        value: TEAM PR REVIEWS ACITVITY
+        variant: h3
+    - component: Text
+      name: text1
+      props:
+        value:
+          $$jsExpression: '`This charts shows PR reviews per team data, in comparison with
+            a benchmark data (if provided). Use the <code>repoId</code> &
+            <code>benchmarkId</code> query params by specifying the <a
+            href="https://ossinsight.io/explore/">OSS Insight</a> id. For the
+            most commons used repositories, like mui/material-ui, mui/base-ui,
+            mui/pigment-css, vercel/next.js you can directly use the repository
+            name.`'
+        mode: markdown
+    - component: Text
+      name: text
+      layout:
+        columnSize: 1
+      props:
+        value:
+          $$jsExpression: "`MUI repo: <b>${page.parameters.repoId ??
+            'mui/material-ui'}</b>, Benchmark repo:
+            <b>${page.parameters.benchmarkId !== '' ?
+            page.parameters.benchmarkId : '(not specified)'}</b>`"
+        mode: markdown
+    - component: Chart
+      name: muiPRReviewsPerTeam
+      layout:
+        columnSize: 1
+      props:
+        data:
+          - label: MUI repo data
+            kind: line
+            data:
+              $$jsExpression: getRepoDataQuery.data
+            color: '#2E96FF'
+            xKey: t_month
+            yKey: cnt
+          - label: Benchmark repo data
+            kind: line
+            data:
+              $$jsExpression: getBenchmarkRepoDataQuery.data
+            color: '#ff9800'
+            xKey: t_month
+            yKey: cnt
+        sx:
+          zIndex: 0
+    - component: codeComponent.Diff
+      name: diff
+  alias:
+    - gtOs1gW
+  parameters:
+    - name: repoId
+      value: '23083156'
+    - name: benchmarkId
+      value: ''
+  queries:
+    - name: getRepoDataQuery
+      mode: query
+      query:
+        function: functions.ts#getTeamPullRequestReviews
+        kind: local
+      parameters:
+        - name: repo
+          value:
+            $$jsExpression: page.parameters.repoId
+    - name: getBenchmarkRepoDataQuery
+      mode: query
+      query:
+        function: functions.ts#getTeamPullRequestReviews
+        kind: local
+      parameters:
+        - name: repo
+          value:
+            $$jsExpression: page.parameters.benchmarkId
