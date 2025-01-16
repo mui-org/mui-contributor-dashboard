@@ -34,7 +34,8 @@ spec:
               return materialUI.rows
                 .concat(muix.rows)
                 .concat(muiDesignKits.rows)
-                //.concat(pigmentCSS.rows)
+                // .concat(pigmentCSS.rows) There is only one product scope today with Pigment CSS
+                .concat(toolpad.rows)
                 .concat(baseUI.rows)
                 .filter((issue) => {
                   const withoutNonProductScopeLabels = issue.labels.filter(
@@ -177,6 +178,27 @@ spec:
               value: { $$jsExpression: "`Bearer ${parameters.GITHUB_TOKEN}`\n" },
             },
           ]
+        method: GET
+      parameters:
+        - name: GITHUB_TOKEN
+          value:
+            $$env: GITHUB_TOKEN
+    - name: toolpad
+      query:
+        kind: rest
+        url: https://api.github.com/repos/mui/toolpad/issues
+        searchParams:
+          - name: labels
+            value: 'status: waiting for maintainer'
+          - name: per_page
+            value: '100'
+          - name: state
+            value: all
+        headers:
+          - name: Authorization
+            value:
+              $$jsExpression: |
+                `Bearer ${parameters.GITHUB_TOKEN}`
         method: GET
       parameters:
         - name: GITHUB_TOKEN
